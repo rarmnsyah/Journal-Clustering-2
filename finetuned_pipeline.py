@@ -1,10 +1,7 @@
 import torch
 import pandas as pd
 import numpy as np
-import transformers
 import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
 
 from sklearn.decomposition import PCA
 from torch.utils.data import Dataset
@@ -50,7 +47,9 @@ class BertClassifier(nn.Module):
 
     def forward(self, input_ids, attention_mask):
         outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
-        return outputs   
+        x = outputs['last_hidden_state'][:, 0, :]
+        x = self.classifier(x)
+        return x 
     
 class BertClassifierEmbed(BertClassifier):
     def __init__(self, num_labels, model_checkpoint):
@@ -58,8 +57,7 @@ class BertClassifierEmbed(BertClassifier):
     
     def forward(self, input_ids, attention_mask):
         outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
-        x = outputs['last_hidden_state']
-        return x 
+        return outputs 
 
 class BertFinetuning():
     def __init__(self, dataset:pd.DataFrame, model_checkpoint:str, device, batch_size:int) -> None:
