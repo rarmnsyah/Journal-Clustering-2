@@ -26,6 +26,13 @@ def plot_vector_distribution(pca_result, kmeans_model, scoop_labels, new_data_pc
         df_pca['plot_color'] = df_pca['scoop_labels']
     elif check_outscoop:
         df_pca.loc[df_pca.scoop_labels == -1, 'plot_color'] = -1
+    else:
+        df_pca['plot_color'] = df_pca['plot_color'] + 1
+        new_dummy_pca = df_pca.sample()
+        new_dummy_pca.plot_color = 0
+        new_dummy_pca['Dimension 1'] = centroids[0][0]
+        new_dummy_pca['Dimension 2'] = centroids[0][1]
+        df_pca = pd.concat([df_pca, new_dummy_pca], ignore_index=True, axis=0)
 
     cluster_palette = sns.color_palette('hls', n_colors=df_pca['plot_color'].nunique() + 1)
     plt.figure(figsize=(8, 6))
