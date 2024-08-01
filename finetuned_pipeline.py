@@ -65,7 +65,7 @@ class BertFinetuning():
         self.model_checkpoint = model_checkpoint
         self.device = device
 
-        self.num_labels = dataset.eissn.nunique()
+        self.num_labels = dataset.eissn.nunique() + 1
         self.model = BertClassifier(self.num_labels, model_checkpoint)
         self.tokenizer = BertTokenizer.from_pretrained(model_checkpoint)
         
@@ -92,14 +92,15 @@ class BertFinetuning():
 
                 logits = self.model(input_ids, attention_mask)
 
-                # print(logits, labels.long())
                 loss = self.criterion(logits, labels.long())
                 loss.backward()
                 self.optimizer.step()
 
-
                 # if (i+1) % 100 == 0:
                 print(f'epoch {epoch + 1}/ {epochs}, batch {i+1}/{n_total_steps}, loss = {loss.item():.4f}')
+                
+    def save(self, model_path):
+        torch.save(self.model.state_dict(), model_path)
                 
     def save(self, model_path):
         torch.save(self.model.state_dict(), model_path)

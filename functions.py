@@ -13,9 +13,10 @@ from Preprocessing import preprocess_text
 from finetuned_pipeline import *
 
 # check_outscoop : default (False), warna plot berdasarkan label clustering, (True) warna untuk outscoop ditambah, ('focus') warna fokus untuk outscoop sama inscoop
-def plot_vector_distribution(pca_result, kmeans_model, scoop_labels, new_data_pca = None, check_outscoop = False):
+def plot_vector_distribution(pca_result, kmeans_model, scoop_labels, new_data_pca = None, check_outscoop = False, lang = None):
     kmeans_labels = kmeans_model.labels_
     centroids = kmeans_model.cluster_centers_
+    color_palette = 'hls'
 
     df_pca = pd.DataFrame(pca_result, columns=['Dimension 1', 'Dimension 2'])
     df_pca['kmeans_labels'] = kmeans_labels
@@ -24,6 +25,17 @@ def plot_vector_distribution(pca_result, kmeans_model, scoop_labels, new_data_pc
 
     if check_outscoop == 'focus':
         df_pca['plot_color'] = df_pca['scoop_labels']
+    elif check_outscoop == 'lang' :
+        if lang == None:
+            raise Exception('Jika memilih mode cek lang, maka diharuskan menyertakan language tiap data')
+        bahasa_decoder = {
+            'en' : 0,
+            'id' : 1
+        }
+
+        lang = [bahasa_decoder[x] for x in lang]
+        df_pca['plot_color'] = lang
+        color_palette = 'Set2'
     elif check_outscoop:
         df_pca.loc[df_pca.scoop_labels == -1, 'plot_color'] = -1
     else:
@@ -34,7 +46,7 @@ def plot_vector_distribution(pca_result, kmeans_model, scoop_labels, new_data_pc
         new_dummy_pca['Dimension 2'] = centroids[0][1]
         df_pca = pd.concat([df_pca, new_dummy_pca], ignore_index=True, axis=0)
 
-    cluster_palette = sns.color_palette('hls', n_colors=df_pca['plot_color'].nunique() + 1)
+    cluster_palette = sns.color_palette(color_palette, n_colors=df_pca['plot_color'].nunique() + 1)
     plt.figure(figsize=(8, 6))
     plot = sns.scatterplot(x='Dimension 1', y='Dimension 2', hue='plot_color', data=df_pca, palette=cluster_palette)
     plot.set(xlabel = None)
