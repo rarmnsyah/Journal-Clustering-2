@@ -60,25 +60,30 @@ class BertClassifierEmbed(BertClassifier):
         return outputs 
 
 class BertFinetuning():
-    def __init__(self, dataset:pd.DataFrame, model_checkpoint:str, device, batch_size:int) -> None:
+    def __init__(self, dataset:pd.DataFrame, model_checkpoint:str, device, batch_size:int, model_path) -> None:
         self.dataset = dataset
         self.model_checkpoint = model_checkpoint
         self.device = device
-
-        self.num_labels = dataset.eissn.nunique() + 1
-        self.model = BertClassifier(self.num_labels, model_checkpoint)
-        self.tokenizer = BertTokenizer.from_pretrained(model_checkpoint)
+        self.batch_size = batch_size
+        self.num_labels = dataset.label.nunique()
+        self.model_path = model_path
+        self.epochs = None
+    
+        self.model = BertClassifier(self.num_labels, self.model_checkpoint)
+        self.tokenizer = BertTokenizer.from_pretrained(self.model_checkpoint)
         
         self.model = self.model.to(self.device)
         self.dataset = BertDataset(self.dataset, self.tokenizer)
         self.criterion = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = 2e-5)
-        self.data_loader = DataLoader(self.dataset, batch_size, shuffle = True)
+        self.data_loader = DataLoader(self.dataset, self.batch_size, shuffle = True)
 
     def train(self, epochs:int):
         n_total_steps = len(self.data_loader)
 
-        for epoch in range(epochs):
+        self.epochs = epochs
+
+        for epoch in range(self.epochs):
             for i, batch in enumerate (self.data_loader):
 
                 input_ids, attention_mask, labels = batch
@@ -96,14 +101,32 @@ class BertFinetuning():
                 loss.backward()
                 self.optimizer.step()
 
-                # if (i+1) % 100 == 0:
-                print(f'epoch {epoch + 1}/ {epochs}, batch {i+1}/{n_total_steps}, loss = {loss.item():.4f}')
+                if (i+1) % 20 == 0:
+                    print(f'epoch {epoch + 1}/ {epochs}, batch {i+1}/{n_total_steps}, loss = {loss.item():.4f}')
+            
+            self.save()
                 
-    def save(self, model_path):
-        torch.save(self.model.state_dict(), model_path)
+    def save(self):
+        torch.save({
+            'epoch': self.epochs,
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            }, self.model_path)
+
                 
-    def save(self, model_path):
-        torch.save(self.model.state_dict(), model_path)
+    def checkpoint(self):
+        self.model = BertClassifier(self.num_labels, self.model_checkpoint)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr = 2e-5)
+
+        checkpoint = torch.load(self.model_path)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        self.epochs = checkpoint['epoch']
+
+class BertFinetuningFromCheckpoint(BertFinetuning):
+    def __init__(self, dataset: pd.DataFrame, model_checkpoint: str, device, batch_size: int, model_path:str) -> None:
+        super().__init__(dataset, model_checkpoint, device, batch_size, model_path)
+        self.checkpoint()
 
 class ScoopPredictor:
     def __init__(self, tokenizer, model, kmeans_model, threshold, pca_data, X_bert):
