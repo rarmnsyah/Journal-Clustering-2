@@ -60,12 +60,12 @@ class BertClassifierEmbed(BertClassifier):
         return outputs 
 
 class BertFinetuning():
-    def __init__(self, dataset:pd.DataFrame, model_checkpoint:str, device, batch_size:int, model_path) -> None:
+    def __init__(self, dataset:pd.DataFrame, model_checkpoint:str, device, batch_size:int, model_path, num_labels) -> None:
         self.dataset = dataset
         self.model_checkpoint = model_checkpoint
         self.device = device
         self.batch_size = batch_size
-        self.num_labels = dataset.label.nunique()
+        self.num_labels = num_labels
         self.model_path = model_path
         self.epochs = None
     
@@ -104,15 +104,14 @@ class BertFinetuning():
                 if (i+1) % 20 == 0:
                     print(f'epoch {epoch + 1}/ {epochs}, batch {i+1}/{n_total_steps}, loss = {loss.item():.4f}')
             
-            self.save()
+            self.save_checkpoint()
                 
-    def save(self):
+    def save_checkpoint(self):
         torch.save({
             'epoch': self.epochs,
             'model_state_dict': self.model.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
             }, self.model_path)
-
                 
     def checkpoint(self):
         self.model = BertClassifier(self.num_labels, self.model_checkpoint)
@@ -123,9 +122,12 @@ class BertFinetuning():
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         self.epochs = checkpoint['epoch']
 
+    def save(self, save_path):
+        torch.save(self.model.state_dict(), save_path)
+
 class BertFinetuningFromCheckpoint(BertFinetuning):
-    def __init__(self, dataset: pd.DataFrame, model_checkpoint: str, device, batch_size: int, model_path:str) -> None:
-        super().__init__(dataset, model_checkpoint, device, batch_size, model_path)
+    def __init__(self, dataset: pd.DataFrame, model_checkpoint: str, device, batch_size: int, model_path:str, num_labels) -> None:
+        super().__init__(dataset, model_checkpoint, device, batch_size, model_path, num_labels)
         self.checkpoint()
 
 class ScoopPredictor:
