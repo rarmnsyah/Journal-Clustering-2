@@ -5,7 +5,7 @@ import re
 # from transformers import pipeline
 from functools import wraps
 from langdetect import detect #981kb
-# from deep_translator import GoogleTranslator
+from deep_translator import GoogleTranslator
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
@@ -50,19 +50,19 @@ def lang_checker_langdetect(text):
     return detected_language
 
 
-# @_return_empty_string_for_invalid_input
-# def en_to_id(text, target_lang='id'):
-#     translate_text = GoogleTranslator(source='auto', target='id').translate(text)
-#     return translate_text 
+@_return_empty_string_for_invalid_input
+def en_to_id(text, target_lang='id'):
+    translate_text = GoogleTranslator(source='auto', target='id').translate(text)
+    return translate_text 
 
-# @_return_empty_string_for_invalid_input
-# def id_to_en(text, target_lang='en'):
-#     try:
-#         translate_text = GoogleTranslator(source='id', target=target_lang).translate(text)
-#     except Exception as e:
-#         print("An error occurred:", e, 'text : ', text[:15] )
-#         return None
-#     return translate_text 
+@_return_empty_string_for_invalid_input
+def id_to_en(text, target_lang='en'):
+    try:
+        translate_text = GoogleTranslator(source='id', target=target_lang).translate(text)
+    except Exception as e:
+        print("An error occurred:", e, 'text : ', text[:15] )
+        return None
+    return translate_text 
 
 
 @_return_empty_string_for_invalid_input

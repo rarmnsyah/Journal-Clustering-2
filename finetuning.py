@@ -28,9 +28,9 @@ finetuned_data_id['label'] = le.fit_transform(finetuned_data_id.jid)
 model_checkpoint = 'bert-base-cased'
 model_checkpoint2 = 'indobenchmark/indobert-base-p1'
 
-# finetuning = BertFinetuning(finetuned_data_en, model_checkpoint, device, 32, 'model/test_bert_pipeline3_01.pt', 12)
-finetuning = BertFinetuning(finetuned_data_id, model_checkpoint2, device, 32, 'model/test_indobert_pipeline3_01.pt', 12)
+finetuning = BertFinetuning(finetuned_data_en, model_checkpoint, device, 32, 'model/test_bert_pipeline3_02.pt', 12)
+# finetuning = BertFinetuning(finetuned_data_id, model_checkpoint2, device, 32, 'model/test_indobert_pipeline3_02.pt', 12)
 print(finetuning.model, device)
-finetuning.train(3)
+finetuning.train(1)
 
-finetuning.save('model/indobert_pipeline03_01.pt')
+finetuning.save('model/bert_pipeline03_02.pt')
