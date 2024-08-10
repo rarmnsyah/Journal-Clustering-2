@@ -101,7 +101,7 @@ class BertFinetuning():
                 loss.backward()
                 self.optimizer.step()
 
-                if (i+1) % 20 == 0:
+                if (i+1) % 5 == 0:
                     print(f'epoch {epoch + 1}/ {epochs}, batch {i+1}/{n_total_steps}, loss = {loss.item():.4f}')
             
             self.save_checkpoint()
