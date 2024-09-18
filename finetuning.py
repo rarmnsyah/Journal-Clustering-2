@@ -10,11 +10,11 @@ from Preprocessing import *
 
 le = LabelEncoder()
 
-model_num = 3
+model_num = 4
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-finetuned_data = pd.read_csv('data/data_sinta_cleaned_s1.csv')
+finetuned_data = pd.read_csv('data/data_sinta_cleaned_s1_translated.csv')
 
 # drop data
 finetuned_data.dropna(inplace=True)
@@ -24,10 +24,10 @@ print(len(finetuned_data), device)
 
 # split data by lang and create label
 finetuned_data_en = finetuned_data[finetuned_data.lang == 'en']
-finetuned_data_id = finetuned_data[finetuned_data.lang == 'id']
+# finetuned_data_id = finetuned_data[finetuned_data.lang == 'id']
 
 finetuned_data_en['label'] = le.fit_transform(finetuned_data_en.journal)
-finetuned_data_id['label'] = le.fit_transform(finetuned_data_id.journal)
+# finetuned_data_id['label'] = le.fit_transform(finetuned_data_id.journal)
 
 model_checkpoint = 'bert-base-cased'
 model_checkpoint2 = 'indobenchmark/indobert-base-p1'
@@ -41,4 +41,4 @@ print(finetuning.model, device)
 
 finetuning.train(3)
 
-finetuning.save(f'model/bert_pipeline3_{model_num}_{finetuned_data_id.label.nunique()}.pt')
+finetuning.save(f'model/bert_pipeline3_{model_num}_{finetuned_data_en.label.nunique()}.pt')

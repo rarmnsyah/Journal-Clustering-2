@@ -14,7 +14,7 @@ class BertDataset(Dataset):
     def __init__(self, data, tokenizer):
         self.data = data
         self.tokenizer = tokenizer
-        self.max_length = 256
+        self.max_length = 128
 
     def __len__(self):
         return len(self.data)
@@ -145,39 +145,27 @@ class ScoopPredictor:
         new_data_pca = pca.transform(new_data.reshape(1, -1))
         return new_data_pca
 
-    def predict_scoop(self, title, abstract, translated = False):
-        device = 'cpu'
-        if torch.cuda.is_available() :
-            device = 'cuda'
-
-        self.model.to(device)
-
+    def predict_scoop(self, title, abstract):
         processed_text = preprocess_text(title + abstract)
-        if translated:
-            if len(processed_text) > 5000:
-                processed_text = processed_text[:5000]
-            # processed_text = id_to_en(processed_text)
-        # print(processed_text)
         encoded_dict = self.tokenizer.encode_plus(
             processed_text,
             add_special_tokens=True,
             max_length=128,
-            padding='max_length',
-            truncation=True,
+            pad_to_max_length=True,
             return_attention_mask=True,
             return_tensors='pt'
         )
-        input_ids = encoded_dict['input_ids'].to(device)
-        attention_mask = encoded_dict['attention_mask'].to(device)
+        input_ids = encoded_dict['input_ids'].to('cpu')
+        attention_mask = encoded_dict['attention_mask'].to('cpu')
 
         with torch.no_grad():
             outputs = self.model(input_ids, attention_mask=attention_mask)
-            new_embedding = outputs.cpu().numpy().reshape(1, -1)
+            last_hidden_states = outputs.last_hidden_state
+            new_embedding = last_hidden_states.cpu().numpy().reshape(1, -1)
 
         new_data_pca = self.fit_new_data_to_pca(new_embedding)
         distance_to_centroid = np.sqrt(np.sum((new_data_pca - self.kmeans_model.cluster_centers_) ** 2, axis=1))
         prediction = "in scoop" if distance_to_centroid <= self.threshold else "out scoop"
         return prediction, new_data_pca, distance_to_centroid
-
 
     
