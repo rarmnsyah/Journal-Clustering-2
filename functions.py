@@ -8,6 +8,7 @@ import os
 
 # from check_lang import id_to_en
 from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score, davies_bouldin_score
 from transformers import BertTokenizer, AutoModel
 
 from Preprocessing import preprocess_text
@@ -52,6 +53,9 @@ def plot_vector_distribution(pca_result, kmeans_model, scoop_labels, new_data_pc
         if journal == None:
             raise Exception('Jika memilih mode cek journal, maka diharuskan menyertakan journal dari tiap data')
         df_pca['plot_color'] = journal
+    elif check_outscoop == 'no cluster':
+        df_pca['plot_color'] = 0
+        cluster_palette = 'tab10'
     elif check_outscoop:
         df_pca.loc[df_pca.scoop_labels == -1, 'plot_color'] = -1
     else:
@@ -153,7 +157,7 @@ def centroid_dist(kmeans_model, X, label=None):
 def outscoop_threshold(centroid_dist):
     return np.mean(centroid_dist) + 2 * np.std(centroid_dist)
 
-def determine_best_k(X, max_k=10):
+def determine_best_k_elbow(X, max_k=10):
     """
     Determine the best K for K-means clustering using the elbow method.
 
@@ -172,21 +176,60 @@ def determine_best_k(X, max_k=10):
         kmeans.fit(X)
         inertia.append(kmeans.inertia_)
 
-    # Plot the elbow curve
-    # plt.figure(figsize=(8, 5))
-    # plt.plot(range(1, max_k + 1), inertia, marker='o')
-    # plt.title('Elbow Method For Optimal K')
-    # plt.xlabel('Number of clusters (K)')
-    # plt.ylabel('Inertia')
-    # plt.grid(True)
-    # plt.show()
-
-    # Identify the elbow point
-    # Note: You can use more sophisticated methods to find the elbow point.
-    # For simplicity, we'll use a basic approach here.
-    # Find the "elbow" by checking the difference in inertia.
     diffs = np.diff(inertia)
     second_diffs = np.diff(diffs)
     optimal_k = np.argmin(second_diffs) + 2  # +2 because second_diffs is len(inertia)-2
+
+    return optimal_k
+
+def determine_best_k_silhouette(X, max_k=10):
+    """
+    Determine the best K for K-means clustering using the elbow method.
+
+    Parameters:
+    - X: The input data (features).
+    - max_k: The maximum number of clusters to try.
+
+    Returns:
+    - The optimal number of clusters K.
+    """
+    silh_score = []
+
+    # Calculate inertia for each K
+    for k in range(2, max_k + 1):
+        kmeans = KMeans(n_clusters=k, random_state=0)
+        cluster_labels = kmeans.fit_predict(X)
+        silhouette_avg = silhouette_score(X, cluster_labels)
+        silh_score.append(silhouette_avg)
+
+    optimal_k = np.argmax(silh_score) + 2  # +2 because second_diffs is len(inertia)-2
+
+    # print(silh_score, np.argmax(silh_score))
+
+    return optimal_k
+
+def determine_best_k_dbi(X, max_k=10):
+    """
+    Determine the best K for K-means clustering using the elbow method.
+
+    Parameters:
+    - X: The input data (features).
+    - max_k: The maximum number of clusters to try.
+
+    Returns:
+    - The optimal number of clusters K.
+    """
+    db_score = []
+
+    # Calculate inertia for each K
+    for k in range(2, max_k + 1):
+        kmeans = KMeans(n_clusters=k, random_state=0)
+        cluster_labels = kmeans.fit_predict(X)
+        db_index = davies_bouldin_score(X, cluster_labels)
+        db_score.append(db_index)
+
+    optimal_k = np.argmax(db_score) + 2  # +2 because second_diffs is len(inertia)-2
+
+    # print(silh_score, np.argmax(silh_score))
 
     return optimal_k

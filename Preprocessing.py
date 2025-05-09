@@ -56,12 +56,6 @@ def remove_nbsp(input_text: str) -> str:
     return processed_text
 
 @_return_empty_string_for_invalid_input
-def remove_abs_word(input_text: str) -> str:
-    """ Remove abstract words in first sentence in the input text """
-    processed_text = re.sub('^(Abstrak|Abstract|ABSTRAK|ABSTRACT)+', '', input_text)
-    return processed_text
-
-@_return_empty_string_for_invalid_input
 def remove_multilang(input_text: str) -> str:
     """ Remove multi lang and only keep the first language in the input text """
     processed_text = re.sub('(Abstract|Abstrak|ABSTRAK|ABSTRACT).*', '', input_text)
@@ -72,12 +66,6 @@ def remove_katakunci(input_text: str) -> str:
     """ Remove kata kunci if theres in the input text """
     processed_text = re.sub('(Kata kunci|Keywords|Keyword).*', '', input_text)
     return processed_text
-
-# @_return_empty_string_for_invalid_input
-# def remove_physics_sign(input_text: str) -> str:
-#     """ Remove number in the input text """
-#     processed_text = re.sub(' (.+\/.+) ', ' ', input_text)
-#     return processed_text
 
 @_return_empty_string_for_invalid_input
 def remove_itemized_bullet_and_numbering(input_text: str) -> str:
@@ -128,7 +116,6 @@ def remove_email(input_text: str) -> str:
 
 @_return_empty_string_for_invalid_input
 def remove_tag(input_text: str) -> str:
-    """ Remove email in the input text """
     CLEANR = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
     return re.sub(CLEANR, '', input_text)
 
@@ -179,12 +166,13 @@ def preprocess_text(input_text: str, processing_function_list: Optional[List[Cal
     """ Preprocess an input text by executing a series of preprocessing functions specified in functions list """
     if processing_function_list is None:
         processing_function_list = [
+            to_lower,
             remove_tag,
-            bersihkan_abstrak,
             remove_nbsp,
             remove_special_character,
             keep_alpha_numeric,
-            remove_number
+            remove_number,
+            remove_whitespace
         ]
     for func in processing_function_list:
         input_text = func(input_text)
