@@ -117,7 +117,7 @@ class StreamlitApp:
         st.title('Jurnal Clustering with Mulltibert and K-Means')
         st.sidebar.title('Options')
 
-        st.set_option('deprecation.showPyplotGlobalUse', False)
+        # st.set_option('deprecation.showPyplotGlobalUse', False)
 
         jurnal_type = self.select_jurnal_types()
         self.jurnal_ids = os.listdir(os.path.join('src', jurnal_type))
